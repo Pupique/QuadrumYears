@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <!-- Directory that contains Assembly-CSharp.dll (and UnityStubs / Waylith). -->
+    <!-- Linux Steam example: .../RimWorld/RimWorldLinux_Data/Managed -->
+    <!-- Windows Steam example: .../RimWorld/RimWorldWin64_Data/Managed -->
+    <RimWorldManagedDir>/path/to/RimWorld/Managed</RimWorldManagedDir>
+
+    <!-- Directory that contains 0Harmony.dll for the matching game version. -->
+    <!-- Steam Workshop Harmony packageId brrainz.harmony (workshop id 2009463077). -->
+    <HarmonyAssemblyDir>/path/to/workshop/content/294100/2009463077/1.7/Assemblies</HarmonyAssemblyDir>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Local.props" Condition="Exists('Local.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <DebugType>embedded</DebugType>
+    <AssemblyName>QuadrumYears</AssemblyName>
+    <Product>QuadrumYears</Product>
+    <RootNamespace>QuadrumYears</RootNamespace>
+    <Version>1.7.0.0</Version>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <!-- <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies> -->
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <OutputPath>../Assemblies/</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <OutputPath>../Assemblies/</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony.Ref" Version="3.0.0-rc.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RimWorldManagedDir)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="UnityStubs">
+      <HintPath>$(RimWorldManagedDir)/UnityStubs.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Waylith">
+      <HintPath>$(RimWorldManagedDir)/Waylith.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="ValidateLocalConfiguration"
+    BeforeTargets="ResolveReferences">
+
+    <Error
+      Condition="'$(RimWorldManagedDir)' == ''"
+      Text="Configure RimWorldManagedDir in Local.props." />
+
+    <Error
+      Condition="'$(HarmonyAssemblyDir)' == ''"
+      Text="Configure HarmonyAssemblyDir in Local.props." />
+
+    <Error
+      Condition="!Exists('$(RimWorldManagedDir)/Assembly-CSharp.dll')"
+      Text="Assembly-CSharp.dll was not found at the configured path ($(RimWorldManagedDir)/Assembly-CSharp.dll)." />
+
+    <Error
+      Condition="!Exists('$(HarmonyAssemblyDir)/0Harmony.dll')"
+      Text="The configured Harmony assembly was not found ($(HarmonyAssemblyDir)/0Harmony.dll)." />
+  </Target>
+
+</Project>
