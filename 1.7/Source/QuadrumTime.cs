@@ -1,3 +1,4 @@
+using System;
 using RimWorld;
 
 namespace QuadrumYears;
@@ -15,4 +16,11 @@ internal static class QuadrumTime
   /// (<see cref="GenDate.TicksPerYear"/> / <see cref="GenDate.TicksPerQuadrum"/>).
   /// </summary>
   public const float AgingRateMultiplier = (float)GenDate.TicksPerYear / GenDate.TicksPerQuadrum;
+
+  /// <summary>
+  /// When true, <see cref="GenDate.TicksToPeriod"/> folds leftover quadrums into days
+  /// (used while building pawn age tooltips).
+  /// </summary>
+  [ThreadStatic]
+  public static bool FoldAgePeriodQuadrums;
 }
