@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <!-- Quadrums are calendar years under this mod; omit them from age breakdowns. -->
+  <AgeChronological>Chronological age: {0} years, {2} days</AgeChronological>
+  <AgeBiological>Biological age: {0} years, {2} days</AgeBiological>
+
+</LanguageData>

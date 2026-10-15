@@ -60,11 +60,20 @@ RimWorld loads content through `LoadFolders.xml` and per-game-version directorie
 - Avoid unused scaffolding, assets, or defs unless the task needs them.
 - Ask when the desired behavior for a system under the timekeeping premise is ambiguous; do not invent a conflicting interpretation of “year” vs “quadrum” without checking.
 
+## Local scratch (`tmp/`)
+
+Use the repository-local `tmp/` directory (create it if missing) for disposable agent work products that should survive OS restarts and `/tmp` wipes. Typical contents: DLL/API inspectors, decompiled or reflected member dumps, signature notes, and similar scratch used while authoring Harmony patches or validating game APIs.
+
+- Prefer `tmp/` over system `/tmp/` (or other volatile OS temp paths) for these artifacts.
+- Before regenerating inspection or API research, check `tmp/` for leftovers from prior agents; reuse or extend what is already there when it is still relevant.
+- Keep `tmp/` gitignored (already listed in `.gitignore`); do not commit its contents.
+- Do not treat `tmp/` as loadable mod content or place versioned source of truth there.
+
 ## Agent workflow
 
-1. Discover the current version trees, load folders, and sources from the repo; do not assume a single-version stub forever.
+1. Discover the current version trees, load folders, and sources from the repo; do not assume a single-version stub forever. Also skim `tmp/` when the task may need game-API or assembly inspection—prior sessions may already have useful dumps.
 2. Edit the version(s) relevant to the task; keep `LoadFolders.xml` and `About` in sync when load paths or supported versions change.
-3. Stay inside the repo except for read/check access to `Local.props` paths.
+3. Stay inside the repo except for read/check access to `Local.props` paths. Write inspection/scratch dumps under repo `tmp/`, not system temp.
 4. After shipping behavioral/binary changes, remind the user to restart RimWorld or reload mods so new assemblies are picked up.
 5. Do **not** start RimWorld autonomously.
 6. For load/runtime failures, ask for a `Player.log` excerpt (or equivalent) rather than scraping undeclared log paths outside the repo.
