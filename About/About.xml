@@ -1,10 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Quadrum as Years</name>
+  <name>Quadrums as Years</name>
   <author>Pupique</author>
   <packageId>Pupique.QuadrumYears</packageId>
+  <url>https://github.com/Pupique/QuadrumYears</url>
   <description>
 Introduces a The Guild-style calendar system to the game where each quadrum is a calendar year.
+
+My biggest motivation for this mod was the slow passing of years. It was rather easy to go from an underdeveloped tribe to a spacefaring powerhouse in a little more than a decade. The same barbarian chieftain who started the tribe is the star captain heading a massive technological empire now.
+
+Simultaneously, I felt that the passing of time in the game itself was too harmonic to warrant an overhaul, thus making a change such as shortening seasons an unwelcome modification. Not to mention the massive amount of patches that would have to be made in order to adapt the game to the new calendar.
+
+Therefore, inspired by the Guild's calendar system, I decided to create a new calendar system that effectively shortens years to just 15 days (one quadrum) whilst maintaining the current seasonal length and order, thus maintaining the passing of time while making years effectively shorter.
+
+With it, pawns age 4x times faster, and the chronological age accompanies it, naturally including children, thus implementing a more realistic aging system. No more seeing 23 year-old grandparents because of the 4-to-1 biological-to-chronological ratio while not making the aging of children exceedingly slow as it would be under vanilla circumstances.
+
+Additionally, this makes a proper demographic management relevant as your pawns not only will die due to unfortunate Rimworld circumstances, but also due to natural aging. So make sure to have children in your colony!
+
+
+NOTES:
+1. It should be safe to add and remove mid-playthrough, even though the 4x biological aging is irreversible;
+2. Even though children were repeatedly mentioned in the description, the mod should work normally without Biotech;
+3. This mod wasn't fully tested in an entire playthrough, so use at your own risk. I also welcome feedback regarding bugs you may find. Thanks!
+4. This mod's development was extensively accelerated with the assistance of AI. I know some (if not most) don't care but I prefer to be transparent about it as AI isn't everyone's cup of tea.
+
+Feel free to visit and even fork the repository:
+<url>https://github.com/Pupique/QuadrumYears</url>
+
+Thanks for playing!
   </description>
 
   <supportedVersions>
