@@ -19,6 +19,24 @@ internal static class Pawn_AgeTracker_BiologicalTicksPerTick_Patch
   }
 }
 
+/// <summary>
+/// Growth points accrue once per real day. Life-years pass four times faster, and
+/// <see cref="Pawn_AgeTracker.GrowthPointsPerDay"/> already includes the campaign
+/// child-aging rate, so scale that daily rate by the same calendar factor.
+/// </summary>
+[HarmonyPatch]
+internal static class Pawn_AgeTracker_GrowthPointsPerDay_Patch
+{
+  private static MethodBase TargetMethod() =>
+    AccessTools.PropertyGetter(typeof(Pawn_AgeTracker), nameof(Pawn_AgeTracker.GrowthPointsPerDay));
+
+  [HarmonyPostfix]
+  private static void Postfix(ref float __result)
+  {
+    __result *= QuadrumTime.AgingRateMultiplier;
+  }
+}
+
 [HarmonyPatch]
 internal static class Pawn_AgeTracker_AgeChronologicalYears_Patch
 {
