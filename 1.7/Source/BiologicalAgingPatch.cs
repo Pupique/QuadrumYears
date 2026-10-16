@@ -46,7 +46,8 @@ internal static class Pawn_AgeTracker_AgeChronologicalYearsFloat_Patch
 }
 
 /// <summary>
-/// Rebuild age tooltips so chronological age uses calendar-year length and neither age shows quadrums.
+/// Rebuild age tooltips so both ages use a 15-day year. Life-years still come from
+/// biological ticks divided by a vanilla year, because those ticks already advance at 4×.
 /// </summary>
 [HarmonyPatch]
 internal static class Pawn_AgeTracker_AgeTooltipString_Patch
@@ -57,96 +58,47 @@ internal static class Pawn_AgeTracker_AgeTooltipString_Patch
   [HarmonyPrefix]
   private static bool Prefix(Pawn_AgeTracker __instance, ref string __result)
   {
-    QuadrumTime.FoldAgePeriodQuadrums = true;
-    try
+    TicksToBiologicalAgePeriod(__instance.AgeBiologicalTicks, out var bioYears, out var bioDays);
+    ChronologicalAgeUtility.TicksToCalendarAgePeriod(
+      __instance.AgeChronologicalTicks,
+      out var chronoYears,
+      out var chronoDays);
+
+    var birthDate = "FullDate".Translate(
+      Find.ActiveLanguageWorker.OrdinalNumber(__instance.BirthDayOfSeasonZeroBased + 1),
+      __instance.BirthQuadrum.Label(),
+      __instance.BirthYear);
+
+    var sb = new StringBuilder();
+    sb.AppendLine("Born".Translate(birthDate));
+    sb.AppendLine("AgeChronological".Translate(chronoYears, 0, chronoDays));
+    sb.Append("AgeBiological".Translate(bioYears, 0, bioDays));
+
+    if (Prefs.DevMode)
     {
-      GenDate.TicksToPeriod(__instance.AgeBiologicalTicks, out var bioYears, out var bioQuadrums, out var bioDays, out _);
-      ChronologicalAgeUtility.TicksToCalendarAgePeriod(
-        __instance.AgeChronologicalTicks,
-        out var chronoYears,
-        out var chronoDays);
-
-      var birthDate = "FullDate".Translate(
-        Find.ActiveLanguageWorker.OrdinalNumber(__instance.BirthDayOfSeasonZeroBased + 1),
-        __instance.BirthQuadrum.Label(),
-        __instance.BirthYear);
-
-      var sb = new StringBuilder();
-      sb.AppendLine("Born".Translate(birthDate));
-      sb.AppendLine("AgeChronological".Translate(chronoYears, 0, chronoDays));
-      sb.Append("AgeBiological".Translate(bioYears, bioQuadrums, bioDays));
-
-      if (Prefs.DevMode)
-      {
-        sb.AppendLine().AppendLine().Append("Dev mode info:");
-        sb.Append("\nageBiologicalTicksInt: ").Append(__instance.AgeBiologicalTicks);
-        sb.Append("\nbirthAbsTicksInt: ").Append(__instance.BirthAbsTicks);
-        sb.Append("\nBiologicalTicksPerTick: ").Append(__instance.BiologicalTicksPerTick);
-      }
-
-      __result = sb.ToString();
-      return false;
-    }
-    finally
-    {
-      QuadrumTime.FoldAgePeriodQuadrums = false;
-    }
-  }
-}
-
-[HarmonyPatch]
-internal static class GenDate_TicksToPeriod_Long_Patch
-{
-  private static MethodBase TargetMethod() =>
-    AccessTools.Method(
-      typeof(GenDate),
-      nameof(GenDate.TicksToPeriod),
-      new[]
-      {
-        typeof(long),
-        typeof(int).MakeByRefType(),
-        typeof(int).MakeByRefType(),
-        typeof(int).MakeByRefType(),
-        typeof(float).MakeByRefType(),
-      });
-
-  [HarmonyPostfix]
-  private static void Postfix(ref int quadrums, ref int days)
-  {
-    FoldQuadrumsIntoDays(ref quadrums, ref days);
-  }
-
-  internal static void FoldQuadrumsIntoDays(ref int quadrums, ref int days)
-  {
-    if (!QuadrumTime.FoldAgePeriodQuadrums || quadrums == 0)
-    {
-      return;
+      sb.AppendLine().AppendLine().Append("Dev mode info:");
+      sb.Append("\nageBiologicalTicksInt: ").Append(__instance.AgeBiologicalTicks);
+      sb.Append("\nbirthAbsTicksInt: ").Append(__instance.BirthAbsTicks);
+      sb.Append("\nBiologicalTicksPerTick: ").Append(__instance.BiologicalTicksPerTick);
     }
 
-    days += quadrums * GenDate.DaysPerQuadrum;
-    quadrums = 0;
+    __result = sb.ToString();
+    return false;
   }
-}
 
-[HarmonyPatch]
-internal static class GenDate_TicksToPeriod_Int_Patch
-{
-  private static MethodBase TargetMethod() =>
-    AccessTools.Method(
-      typeof(GenDate),
-      nameof(GenDate.TicksToPeriod),
-      new[]
-      {
-        typeof(int),
-        typeof(int).MakeByRefType(),
-        typeof(int).MakeByRefType(),
-        typeof(int).MakeByRefType(),
-        typeof(float).MakeByRefType(),
-      });
-
-  [HarmonyPostfix]
-  private static void Postfix(ref int quadrums, ref int days)
+  /// <summary>
+  /// One life-year is still <see cref="GenDate.TicksPerYear"/> biological ticks.
+  /// The remainder is shown as 0–14 days, matching a calendar year of one quadrum.
+  /// </summary>
+  private static void TicksToBiologicalAgePeriod(long ticks, out int years, out int days)
   {
-    GenDate_TicksToPeriod_Long_Patch.FoldQuadrumsIntoDays(ref quadrums, ref days);
+    if (ticks < 0)
+    {
+      ticks = 0;
+    }
+
+    years = (int)(ticks / GenDate.TicksPerYear);
+    var ticksPerCalendarDay = GenDate.TicksPerYear / GenDate.DaysPerQuadrum;
+    days = (int)(ticks % GenDate.TicksPerYear / ticksPerCalendarDay);
   }
 }
