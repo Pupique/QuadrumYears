@@ -1,5 +1,5 @@
-using System;
 using System.Reflection;
+using System.Text;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -19,9 +19,34 @@ internal static class Pawn_AgeTracker_BiologicalTicksPerTick_Patch
   }
 }
 
+[HarmonyPatch]
+internal static class Pawn_AgeTracker_AgeChronologicalYears_Patch
+{
+  private static MethodBase TargetMethod() =>
+    AccessTools.PropertyGetter(typeof(Pawn_AgeTracker), nameof(Pawn_AgeTracker.AgeChronologicalYears));
+
+  [HarmonyPostfix]
+  private static void Postfix(Pawn_AgeTracker __instance, ref int __result)
+  {
+    __result = ChronologicalAgeUtility.Years(__instance.AgeChronologicalTicks);
+  }
+}
+
+[HarmonyPatch]
+internal static class Pawn_AgeTracker_AgeChronologicalYearsFloat_Patch
+{
+  private static MethodBase TargetMethod() =>
+    AccessTools.PropertyGetter(typeof(Pawn_AgeTracker), nameof(Pawn_AgeTracker.AgeChronologicalYearsFloat));
+
+  [HarmonyPostfix]
+  private static void Postfix(Pawn_AgeTracker __instance, ref float __result)
+  {
+    __result = ChronologicalAgeUtility.YearsFloat(__instance.AgeChronologicalTicks);
+  }
+}
+
 /// <summary>
-/// Age tooltips pass years/quadrums/days to keyed strings. Fold leftover quadrums into days
-/// so ages read as years + days only (quadrums are calendar years under this mod).
+/// Rebuild age tooltips so chronological age uses calendar-year length and neither age shows quadrums.
 /// </summary>
 [HarmonyPatch]
 internal static class Pawn_AgeTracker_AgeTooltipString_Patch
@@ -30,13 +55,43 @@ internal static class Pawn_AgeTracker_AgeTooltipString_Patch
     AccessTools.PropertyGetter(typeof(Pawn_AgeTracker), nameof(Pawn_AgeTracker.AgeTooltipString));
 
   [HarmonyPrefix]
-  private static void Prefix() => QuadrumTime.FoldAgePeriodQuadrums = true;
+  private static bool Prefix(Pawn_AgeTracker __instance, ref string __result)
+  {
+    QuadrumTime.FoldAgePeriodQuadrums = true;
+    try
+    {
+      GenDate.TicksToPeriod(__instance.AgeBiologicalTicks, out var bioYears, out var bioQuadrums, out var bioDays, out _);
+      ChronologicalAgeUtility.TicksToCalendarAgePeriod(
+        __instance.AgeChronologicalTicks,
+        out var chronoYears,
+        out var chronoDays);
 
-  [HarmonyPostfix]
-  private static void Postfix() => QuadrumTime.FoldAgePeriodQuadrums = false;
+      var birthDate = "FullDate".Translate(
+        Find.ActiveLanguageWorker.OrdinalNumber(__instance.BirthDayOfSeasonZeroBased + 1),
+        __instance.BirthQuadrum.Label(),
+        __instance.BirthYear);
 
-  [HarmonyFinalizer]
-  private static void Finalizer() => QuadrumTime.FoldAgePeriodQuadrums = false;
+      var sb = new StringBuilder();
+      sb.AppendLine("Born".Translate(birthDate));
+      sb.AppendLine("AgeChronological".Translate(chronoYears, 0, chronoDays));
+      sb.Append("AgeBiological".Translate(bioYears, bioQuadrums, bioDays));
+
+      if (Prefs.DevMode)
+      {
+        sb.AppendLine().AppendLine().Append("Dev mode info:");
+        sb.Append("\nageBiologicalTicksInt: ").Append(__instance.AgeBiologicalTicks);
+        sb.Append("\nbirthAbsTicksInt: ").Append(__instance.BirthAbsTicks);
+        sb.Append("\nBiologicalTicksPerTick: ").Append(__instance.BiologicalTicksPerTick);
+      }
+
+      __result = sb.ToString();
+      return false;
+    }
+    finally
+    {
+      QuadrumTime.FoldAgePeriodQuadrums = false;
+    }
+  }
 }
 
 [HarmonyPatch]
