@@ -52,16 +52,8 @@
       Text="Configure RimWorldManagedDir in Local.props." />
 
     <Error
-      Condition="'$(HarmonyAssemblyDir)' == ''"
-      Text="Configure HarmonyAssemblyDir in Local.props." />
-
-    <Error
       Condition="!Exists('$(RimWorldManagedDir)/Assembly-CSharp.dll')"
       Text="Assembly-CSharp.dll was not found at the configured path ($(RimWorldManagedDir)/Assembly-CSharp.dll)." />
-
-    <Error
-      Condition="!Exists('$(HarmonyAssemblyDir)/0Harmony.dll')"
-      Text="The configured Harmony assembly was not found ($(HarmonyAssemblyDir)/0Harmony.dll)." />
   </Target>
 
 </Project>
