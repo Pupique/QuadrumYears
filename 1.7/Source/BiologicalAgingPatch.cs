@@ -20,6 +20,23 @@ internal static class Pawn_AgeTracker_BiologicalTicksPerTick_Patch
 }
 
 /// <summary>
+/// Vanilla presets start children at 4×. This mod already multiplies aging by 4,
+/// so the preset default is 1× and a chosen storyteller rate still stacks on top.
+/// </summary>
+[HarmonyPatch]
+internal static class DifficultyDef_ChildAgingRate_Patch
+{
+  private static MethodBase TargetMethod() =>
+    AccessTools.Constructor(typeof(DifficultyDef));
+
+  [HarmonyPostfix]
+  private static void Postfix(DifficultyDef __instance)
+  {
+    __instance.childAgingRate = QuadrumTime.DefaultChildAgingRate;
+  }
+}
+
+/// <summary>
 /// Growth points accrue once per real day. Life-years pass four times faster, and
 /// <see cref="Pawn_AgeTracker.GrowthPointsPerDay"/> already includes the campaign
 /// child-aging rate, so scale that daily rate by the same calendar factor.

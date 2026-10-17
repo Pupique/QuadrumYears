@@ -15,4 +15,10 @@ internal static class QuadrumTime
   /// (<see cref="GenDate.TicksPerYear"/> / <see cref="GenDate.TicksPerQuadrum"/>).
   /// </summary>
   public const float AgingRateMultiplier = (float)GenDate.TicksPerYear / GenDate.TicksPerQuadrum;
+
+  /// <summary>Storyteller child-aging preset. Vanilla uses 4, which would stack into 16× here.</summary>
+  public const float DefaultChildAgingRate = 1f;
+
+  /// <summary>Vanilla <see cref="DifficultyDef"/> field initializer for <c>childAgingRate</c>.</summary>
+  public const float VanillaChildAgingRate = 4f;
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
@@ -15,6 +16,7 @@ namespace QuadrumYears;
 public sealed class QuadrumYearsWorldComponent : WorldComponent
 {
   private bool chronologicalAgesRemapped;
+  private bool childAgingDefaultAdjusted;
 
   public QuadrumYearsWorldComponent(World world) : base(world)
   {
@@ -24,6 +26,7 @@ public sealed class QuadrumYearsWorldComponent : WorldComponent
   {
     base.ExposeData();
     Scribe_Values.Look(ref chronologicalAgesRemapped, "qyChronologicalAgesRemapped");
+    Scribe_Values.Look(ref childAgingDefaultAdjusted, "qyChildAgingDefaultAdjusted");
   }
 
   public override void FinalizeInit(bool fromLoad)
@@ -39,6 +42,33 @@ public sealed class QuadrumYearsWorldComponent : WorldComponent
     }
 
     chronologicalAgesRemapped = true;
+    childAgingDefaultAdjusted = true;
+  }
+
+  /// <summary>
+  /// Saves written before this default still store vanilla 4×. Move that untouched
+  /// value to 1× once; any other choice is left alone.
+  /// </summary>
+  internal void ApplyDefaultChildAgingIfNeeded()
+  {
+    if (childAgingDefaultAdjusted)
+    {
+      return;
+    }
+
+    var difficulty = Find.Storyteller?.difficulty;
+    if (difficulty == null)
+    {
+      return;
+    }
+
+    if (Math.Abs(difficulty.childAgingRate - QuadrumTime.VanillaChildAgingRate) < 0.01f)
+    {
+      difficulty.childAgingRate = QuadrumTime.DefaultChildAgingRate;
+      Log.Message("[Quadrum Years] Set child aging rate to 1x so it is not stacked on the calendar multiplier.");
+    }
+
+    childAgingDefaultAdjusted = true;
   }
 
   internal void MigrateChronologicalAgesIfNeeded()
@@ -126,6 +156,8 @@ internal static class Game_LoadGame_Patch
   [HarmonyPostfix]
   private static void Postfix(Game __instance)
   {
-    __instance.World?.GetComponent<QuadrumYearsWorldComponent>()?.MigrateChronologicalAgesIfNeeded();
+    var component = __instance.World?.GetComponent<QuadrumYearsWorldComponent>();
+    component?.MigrateChronologicalAgesIfNeeded();
+    component?.ApplyDefaultChildAgingIfNeeded();
   }
 }
