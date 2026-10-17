@@ -12,7 +12,7 @@ Identity (keep stable unless the user changes them deliberately):
 
 - Package id: `Pupique.QuadrumYears`
 - Harmony id: `Pupique.QuadrumYears`
-- Meta and display strings live in `About/`; treat them as source of truth for name, author, dependencies, and supported versions.
+- Meta and display strings live in `Mod/About/`; treat them as source of truth for name, author, dependencies, and supported versions.
 
 ## Hard restrictions
 
@@ -21,8 +21,8 @@ Non-negotiable without clear user consent for that action.
 ### 1. Repository directory boundaries
 
 - Do not read, write, modify, install, delete, or otherwise target paths **outside** this repository root without consent.
-- **Exception:** paths declared in the machine-local `Local.props` for the version tree being built (`RimWorldManagedDir`, `HarmonyAssemblyDir`, and any future properties added there). Those may be checked and read autonomously for builds, reference validation, and game-API inspection.
-- Still ask before changing `Local.props` values, writing under those external trees, or exploring paths not listed in `Local.props`.
+- **Exception:** paths declared in the machine-local `Local.props` for the version tree being built (`RimWorldManagedDir`, optional `RimWorldModsDir` / `RimWorldModInstallDir`, and any future properties added there). Those may be checked and read autonomously for builds, reference validation, and game-API inspection. The build’s post-build deploy target may also **write** a mirror of `Mod/` into the resolved RimWorld `Mods/QuadrumYears` install directory when that path comes from those properties (or is derived from `RimWorldManagedDir`).
+- Still ask before changing `Local.props` values, writing under other external trees, or exploring paths not listed in `Local.props`.
 - Prefer solving problems with files already in this repo when that is enough.
 
 ### 2. Git write commands
@@ -33,23 +33,26 @@ Non-negotiable without clear user consent for that action.
 
 ### 3. Versioned mod layout
 
-RimWorld loads content through `LoadFolders.xml` and per-game-version directories.
+RimWorld loads content through `LoadFolders.xml` and per-game-version directories. In this repository, **only `Mod/` is the loadable mod root** (what belongs in RimWorld’s `Mods` folder / Steam Workshop upload).
 
-- Keep version-specific code, assemblies, defs, and related assets under the matching version folder (`<major.minor>/…`).
-- Keep shared mod metadata at the repository root (`About/`, `LoadFolders.xml`, this file, and similar).
-- Prefer a full mirrored tree per supported game version, but stay flexible: new versions may largely copy and adapt a prior tree when APIs allow.
-- When adding or updating a game version: sync the version directory, `LoadFolders.xml`, and `About` supported-versions metadata; keep that version’s project and local build props consistent with how the rest of the repo builds.
-- Do not place version-specific loadable content at the root in ways that bypass `LoadFolders.xml`.
+- Keep loadable metadata at `Mod/About/` and `Mod/LoadFolders.xml`.
+- Keep version-specific loadable content under `Mod/<major.minor>/…` (for example assemblies under `Mod/1.7/Assemblies/`).
+- Keep C# projects under `<major.minor>/Source/` at the repository root (outside `Mod/`), so source is not shipped with the loadable tree.
+- Prefer a full mirrored loadable tree per supported game version under `Mod/`, but stay flexible: new versions may largely copy and adapt a prior tree when APIs allow.
+- When adding or updating a game version: sync `Mod/<version>/`, `Mod/LoadFolders.xml`, and `Mod/About` supported-versions metadata; keep that version’s project and local build props consistent with how the rest of the repo builds.
+- Do not place version-specific loadable content outside `Mod/` in ways that bypass `LoadFolders.xml`.
 - Do not invent a parallel loading scheme unless the user redesigns it.
+- Steam / workshop publishing should target `Mod/` only—not the whole git repository.
 
 ## Build and local configuration
 
 - Each supported game version that ships C# should have its own project under that version’s `Source/` (or the layout already established for that version).
 - Machine-specific paths belong only in gitignored `Local.props`. Commit a `Local.props.example` with placeholders beside it; never commit real machine paths.
-- `Local.props` must supply whatever the project validates (at minimum the managed game assembly directory and the Harmony assembly directory, unless the project evolves).
-- Build outputs for a version must land where `LoadFolders.xml` loads them for that version (typically that version’s `Assemblies/`).
+- `Local.props` must supply whatever the project validates (at minimum `RimWorldManagedDir`). Optional `RimWorldModsDir` or `RimWorldModInstallDir` override where the post-build mirror deploys.
+- Build outputs for a version must land where `LoadFolders.xml` loads them for that version (`Mod/<version>/Assemblies/`).
+- After a successful build, the project mirrors `Mod/` into RimWorld’s `Mods/QuadrumYears` (derived from `Local.props` paths unless overridden).
 - Do not commit `bin/`, `obj/`, or other local build intermediates covered by `.gitignore`.
-- Restore/build with the version’s project file after `Local.props` exists; confirm the expected DLL (or other loadable outputs) update under the correct version folder.
+- Restore/build with the version’s project file after `Local.props` exists; confirm the expected DLL (or other loadable outputs) update under the correct `Mod/` version folder.
 
 ## Code and patching guidelines
 
@@ -72,8 +75,8 @@ Use the repository-local `tmp/` directory (create it if missing) for disposable 
 ## Agent workflow
 
 1. Discover the current version trees, load folders, and sources from the repo; do not assume a single-version stub forever. Also skim `tmp/` when the task may need game-API or assembly inspection—prior sessions may already have useful dumps.
-2. Edit the version(s) relevant to the task; keep `LoadFolders.xml` and `About` in sync when load paths or supported versions change.
-3. Stay inside the repo except for read/check access to `Local.props` paths. Write inspection/scratch dumps under repo `tmp/`, not system temp.
+2. Edit the version(s) relevant to the task; keep `Mod/LoadFolders.xml` and `Mod/About` in sync when load paths or supported versions change.
+3. Stay inside the repo except for read/check access to `Local.props` paths, and the post-build write to the resolved `Mods/QuadrumYears` deploy directory. Write inspection/scratch dumps under repo `tmp/`, not system temp.
 4. After shipping behavioral/binary changes, remind the user to restart RimWorld or reload mods so new assemblies are picked up.
 5. Do **not** start RimWorld autonomously.
 6. For load/runtime failures, ask for a `Player.log` excerpt (or equivalent) rather than scraping undeclared log paths outside the repo.
@@ -83,6 +86,6 @@ Use the repository-local `tmp/` directory (create it if missing) for disposable 
 ## Done criteria (general)
 
 - The touched version tree builds cleanly with that version’s local props.
-- Loadable outputs and `LoadFolders.xml` / `About` metadata agree for the versions involved.
+- Loadable outputs and `Mod/LoadFolders.xml` / `Mod/About` metadata agree for the versions involved.
 - No machine-local `Local.props` or secrets are committed; examples remain placeholders.
 - Changes advance or support the mod’s timekeeping premise within the scope the user set for the task.

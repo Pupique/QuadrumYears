@@ -16,11 +16,33 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <OutputPath>../Assemblies/</OutputPath>
+    <OutputPath>../../Mod/1.7/Assemblies/</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <OutputPath>../Assemblies/</OutputPath>
+    <OutputPath>../../Mod/1.7/Assemblies/</OutputPath>
     <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <!-- Loadable mod root in this repo (About/, LoadFolders.xml, version folders). -->
+  <PropertyGroup>
+    <QuadrumYearsModRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../Mod'))</QuadrumYearsModRoot>
+  </PropertyGroup>
+
+  <!--
+    Deploy destination: Mods/QuadrumYears under the RimWorld install.
+    Resolution order:
+      1. RimWorldModInstallDir (full path to the QuadrumYears folder), if set
+      2. RimWorldModsDir/QuadrumYears, if RimWorldModsDir is set
+      3. RimWorldManagedDir/Mods/QuadrumYears when ManagedDir is the game root
+      4. RimWorldManagedDir/../../Mods/QuadrumYears (standard .../*_Data/Managed layout)
+  -->
+  <PropertyGroup>
+    <RimWorldModInstallDir
+      Condition="'$(RimWorldModInstallDir)' == '' and '$(RimWorldModsDir)' != ''">$(RimWorldModsDir)/QuadrumYears</RimWorldModInstallDir>
+    <RimWorldModInstallDir
+      Condition="'$(RimWorldModInstallDir)' == '' and Exists('$(RimWorldManagedDir)/Mods')">$(RimWorldManagedDir)/Mods/QuadrumYears</RimWorldModInstallDir>
+    <RimWorldModInstallDir
+      Condition="'$(RimWorldModInstallDir)' == '' and '$(RimWorldManagedDir)' != ''">$(RimWorldManagedDir)/../../Mods/QuadrumYears</RimWorldModInstallDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,6 +76,41 @@
     <Error
       Condition="!Exists('$(RimWorldManagedDir)/Assembly-CSharp.dll')"
       Text="Assembly-CSharp.dll was not found at the configured path ($(RimWorldManagedDir)/Assembly-CSharp.dll)." />
+  </Target>
+
+  <!-- Mirror Mod/ into the RimWorld Mods folder after a successful build. -->
+  <Target Name="DeployToRimWorldMods" AfterTargets="Build">
+    <Error
+      Condition="'$(RimWorldModInstallDir)' == ''"
+      Text="Could not resolve RimWorldModInstallDir. Set RimWorldModsDir or RimWorldModInstallDir in Local.props, or ensure RimWorldManagedDir is set." />
+
+    <Error
+      Condition="!Exists('$(QuadrumYearsModRoot)/About/About.xml')"
+      Text="Loadable mod root is missing About/About.xml at $(QuadrumYearsModRoot)." />
+
+    <PropertyGroup>
+      <_NormalizedInstallDir>$([System.IO.Path]::GetFullPath('$(RimWorldModInstallDir)'))</_NormalizedInstallDir>
+    </PropertyGroup>
+
+    <Error
+      Condition="!$(_NormalizedInstallDir.EndsWith('QuadrumYears')) and !$(_NormalizedInstallDir.EndsWith('QuadrumYears/')) and !$(_NormalizedInstallDir.EndsWith('QuadrumYears\'))"
+      Text="Refusing to deploy: install dir must end with QuadrumYears (got $(_NormalizedInstallDir))." />
+
+    <Message
+      Importance="high"
+      Text="[Quadrum Years] Mirroring $(QuadrumYearsModRoot) -&gt; $(_NormalizedInstallDir)" />
+
+    <RemoveDir
+      Directories="$(_NormalizedInstallDir)"
+      Condition="Exists('$(_NormalizedInstallDir)')" />
+
+    <ItemGroup>
+      <_DeployFiles Include="$(QuadrumYearsModRoot)/**/*" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(_DeployFiles)"
+      DestinationFiles="@(_DeployFiles->'$(_NormalizedInstallDir)/%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 
 </Project>

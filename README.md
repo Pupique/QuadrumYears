@@ -6,7 +6,7 @@ A RimWorld mod that reinterprets the in-game calendar so that **one year equals 
 **Author:** Pupique  
 **License:** [GPL-3.0](LICENSE)
 
-Supported game versions and the player-facing description live in [`About/About.xml`](About/About.xml)—treat that as the source of truth when they change.
+Supported game versions and the player-facing description live in [`Mod/About/About.xml`](Mod/About/About.xml)—treat that as the source of truth when they change.
 
 ## Premise
 
@@ -18,21 +18,24 @@ Exact gameplay effects may expand or shift as the mod develops; the north star i
 
 ## How the repository is organized
 
-Shared mod metadata sits at the repository root (`About/`, `LoadFolders.xml`, this file). Loadable content is versioned: each supported RimWorld release has its own folder (for example `1.7/`), wired through `LoadFolders.xml`.
+Only the [`Mod/`](Mod/) directory is what RimWorld (and Steam Workshop) should load. Everything else is development metadata and source.
 
-Within a version folder you will typically find:
+| Path | Role |
+|------|------|
+| `Mod/` | Loadable mod root (`About/`, `LoadFolders.xml`, versioned content) |
+| `Mod/About/` | Mod metadata and preview |
+| `Mod/<version>/` | Assemblies and other assets for that game version |
+| `<version>/Source/` | C# project and Harmony patches (not shipped inside `Mod/`) |
 
-- **Source/** — C# project and Harmony patches that implement the timekeeping changes
-- **Assemblies/** — build output loaded by the game
-- **Languages/** and other assets as needed
+`LoadFolders.xml` wires each supported RimWorld release to its folder under `Mod/` (for example `Mod/1.7/`).
 
-Adding another game version means mirroring that tree, then updating `LoadFolders.xml` and the supported-versions list in `About/About.xml`.
+Adding another game version means mirroring the version tree under `Mod/`, adding a matching `Source/` project when needed, then updating `Mod/LoadFolders.xml` and the supported-versions list in `Mod/About/About.xml`.
 
 ## Requirements
 
 ### To play
 
-- A supported RimWorld version (see `About/About.xml`)
+- A supported RimWorld version (see `Mod/About/About.xml`)
 - [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) (`brrainz.harmony`)
 
 Enable this mod after Harmony. Restart RimWorld or reload mods after updating assemblies.
@@ -41,7 +44,6 @@ Enable this mod after Harmony. Restart RimWorld or reload mods after updating as
 
 - A [.NET SDK](https://dotnet.microsoft.com/download) compatible with the version project’s `TargetFramework`
 - A matching RimWorld install (managed game assemblies for compile references)
-- Harmony assemblies for that same game version (`0Harmony.dll`)
 
 Machine-specific paths are not committed. Each version’s project uses a gitignored `Local.props` beside the `.csproj` (see below).
 
@@ -49,7 +51,7 @@ Machine-specific paths are not committed. Each version’s project uses a gitign
 
 Commands below use the current `1.7` tree as an example; substitute the version folder you are building.
 
-1. Clone this repository (into RimWorld’s `Mods` folder, or elsewhere if you prefer to copy/symlink the loadable tree).
+1. Clone this repository somewhere convenient (not necessarily inside RimWorld’s `Mods` folder).
 
 2. Configure local paths:
 
@@ -57,7 +59,7 @@ Commands below use the current `1.7` tree as an example; substitute the version 
    cp 1.7/Source/Local.props.example 1.7/Source/Local.props
    ```
 
-   Edit `Local.props` and set `RimWorldManagedDir` and `HarmonyAssemblyDir` to the directories that contain `Assembly-CSharp.dll` and `0Harmony.dll` respectively. The example file has typical Steam path hints.
+   Edit `Local.props` and set `RimWorldManagedDir` to the directory that contains `Assembly-CSharp.dll`. Optionally set `RimWorldModsDir` or `RimWorldModInstallDir` if the default deploy path derived from `RimWorldManagedDir` is wrong for your install. The example file has typical Steam path hints.
 
 3. Restore and build:
 
@@ -66,7 +68,7 @@ Commands below use the current `1.7` tree as an example; substitute the version 
    dotnet build 1.7/Source/QuadrumYears.csproj -c Release
    ```
 
-   Output lands under that version’s `Assemblies/` folder, where `LoadFolders.xml` expects it.
+   Output lands under `Mod/1.7/Assemblies/`. After a successful build, the project mirrors `Mod/` into RimWorld’s `Mods/QuadrumYears` folder.
 
 4. Load the mod in-game with Harmony enabled, then restart or reload mods so the new assembly is picked up.
 
