@@ -9,6 +9,8 @@
     <Product>QuadrumYears</Product>
     <RootNamespace>QuadrumYears</RootNamespace>
     <Version>1.7.0.0</Version>
+    <!-- RimWorld major.minor this project targets; drives OutputPath and live-install assembly deploy. -->
+    <RimWorldGameVersion>1.7</RimWorldGameVersion>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDependencyFile>false</GenerateDependencyFile>
@@ -16,25 +18,21 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <OutputPath>../../Mod/1.7/Assemblies/</OutputPath>
+    <OutputPath>../../Mod/$(RimWorldGameVersion)/Assemblies/</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <OutputPath>../../Mod/1.7/Assemblies/</OutputPath>
+    <OutputPath>../../Mod/$(RimWorldGameVersion)/Assemblies/</OutputPath>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <!-- Loadable mod root in this repo (About/, LoadFolders.xml, version folders). -->
-  <PropertyGroup>
-    <QuadrumYearsModRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../Mod'))</QuadrumYearsModRoot>
-  </PropertyGroup>
-
   <!--
-    Deploy destination: Mods/QuadrumYears under the RimWorld install.
-    Resolution order:
+    Live-install assembly destination: Mods/QuadrumYears/<version>/Assemblies.
+    Resolution order for the mod install root:
       1. RimWorldModInstallDir (full path to the QuadrumYears folder), if set
       2. RimWorldModsDir/QuadrumYears, if RimWorldModsDir is set
       3. RimWorldManagedDir/Mods/QuadrumYears when ManagedDir is the game root
       4. RimWorldManagedDir/../../Mods/QuadrumYears (standard .../*_Data/Managed layout)
+    Full Mod/ trees are deployed by repo-root deploy.sh, not by this target.
   -->
   <PropertyGroup>
     <RimWorldModInstallDir
@@ -78,39 +76,39 @@
       Text="Assembly-CSharp.dll was not found at the configured path ($(RimWorldManagedDir)/Assembly-CSharp.dll)." />
   </Target>
 
-  <!-- Mirror Mod/ into the RimWorld Mods folder after a successful build. -->
-  <Target Name="DeployToRimWorldMods" AfterTargets="Build">
+  <!-- Copy built assemblies into the live RimWorld mod install (assemblies only). -->
+  <Target Name="DeployAssembliesToRimWorldMods" AfterTargets="Build">
     <Error
       Condition="'$(RimWorldModInstallDir)' == ''"
       Text="Could not resolve RimWorldModInstallDir. Set RimWorldModsDir or RimWorldModInstallDir in Local.props, or ensure RimWorldManagedDir is set." />
 
-    <Error
-      Condition="!Exists('$(QuadrumYearsModRoot)/About/About.xml')"
-      Text="Loadable mod root is missing About/About.xml at $(QuadrumYearsModRoot)." />
-
     <PropertyGroup>
       <_NormalizedInstallDir>$([System.IO.Path]::GetFullPath('$(RimWorldModInstallDir)'))</_NormalizedInstallDir>
+      <_InstallAssembliesDir>$(_NormalizedInstallDir)/$(RimWorldGameVersion)/Assemblies</_InstallAssembliesDir>
     </PropertyGroup>
 
     <Error
       Condition="!$(_NormalizedInstallDir.EndsWith('QuadrumYears')) and !$(_NormalizedInstallDir.EndsWith('QuadrumYears/')) and !$(_NormalizedInstallDir.EndsWith('QuadrumYears\'))"
       Text="Refusing to deploy: install dir must end with QuadrumYears (got $(_NormalizedInstallDir))." />
 
-    <Message
-      Importance="high"
-      Text="[Quadrum Years] Mirroring $(QuadrumYearsModRoot) -&gt; $(_NormalizedInstallDir)" />
+    <Warning
+      Condition="!Exists('$(_NormalizedInstallDir)/About/About.xml')"
+      Text="Live mod install looks incomplete (missing About/About.xml at $(_NormalizedInstallDir)). Run ./deploy.sh from the repo root for a full Mod/ mirror, then rebuild if needed." />
 
-    <RemoveDir
-      Directories="$(_NormalizedInstallDir)"
-      Condition="Exists('$(_NormalizedInstallDir)')" />
+    <MakeDir Directories="$(_InstallAssembliesDir)" />
 
     <ItemGroup>
-      <_DeployFiles Include="$(QuadrumYearsModRoot)/**/*" />
+      <_BuiltAssemblies Include="$(TargetDir)*.dll" />
     </ItemGroup>
 
+    <Message
+      Importance="high"
+      Text="[Quadrum Years] Copying assemblies -&gt; $(_InstallAssembliesDir)" />
+
     <Copy
-      SourceFiles="@(_DeployFiles)"
-      DestinationFiles="@(_DeployFiles->'$(_NormalizedInstallDir)/%(RecursiveDir)%(Filename)%(Extension)')" />
+      SourceFiles="@(_BuiltAssemblies)"
+      DestinationFolder="$(_InstallAssembliesDir)"
+      SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

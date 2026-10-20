@@ -59,7 +59,9 @@ Commands below use the current `1.7` tree as an example; substitute the version 
    cp 1.7/Source/Local.props.example 1.7/Source/Local.props
    ```
 
-   Edit `Local.props` and set `RimWorldManagedDir` to the directory that contains `Assembly-CSharp.dll`. Optionally set `RimWorldModsDir` or `RimWorldModInstallDir` if the default deploy path derived from `RimWorldManagedDir` is wrong for your install. The example file has typical Steam path hints.
+   Edit `Local.props` and set `RimWorldManagedDir` to the directory that contains `Assembly-CSharp.dll`. Optionally set `RimWorldModsDir` or `RimWorldModInstallDir` if the default live-install path derived from `RimWorldManagedDir` is wrong for your install. The example file has typical Steam path hints.
+
+   For a full install of loadable content, also configure `paths.env` (from `paths.env.example`) and run `./deploy.sh` once so `Mods/QuadrumYears` exists.
 
 3. Restore and build:
 
@@ -68,11 +70,11 @@ Commands below use the current `1.7` tree as an example; substitute the version 
    dotnet build 1.7/Source/QuadrumYears.csproj -c Release
    ```
 
-   Output lands under `Mod/1.7/Assemblies/`. After a successful build, the project mirrors `Mod/` into RimWorld’s `Mods/QuadrumYears` folder.
+   Output lands under `Mod/1.7/Assemblies/`. After a successful build, the project also copies those assemblies into `Mods/QuadrumYears/1.7/Assemblies/` (it does not rewrite the rest of the install). Use `./deploy.sh` when About, `LoadFolders.xml`, defs, or other non-assembly content under `Mod/` changes.
 
 4. Load the mod in-game with Harmony enabled, then restart or reload mods so the new assembly is picked up.
 
-Do not commit `Local.props`, `bin/`, `obj/`, or built `*.dll` files (already covered by `.gitignore`).
+Do not commit `Local.props`, `paths.env`, `bin/`, `obj/`, or built `*.dll` files (already covered by `.gitignore`).
 
 ## Contributing
 

@@ -6,8 +6,9 @@
     <!-- Some installs place managed assemblies at the RimWorld game root instead. -->
     <RimWorldManagedDir>/path/to/RimWorld/Managed</RimWorldManagedDir>
 
-    <!-- Optional: parent Mods directory. When set, the build deploys to $(RimWorldModsDir)/QuadrumYears. -->
+    <!-- Optional: parent Mods directory. When set, the build copies assemblies to $(RimWorldModsDir)/QuadrumYears/<version>/Assemblies. -->
     <!-- If omitted, the project derives the install path from RimWorldManagedDir. -->
+    <!-- Full Mod/ trees are deployed by repo-root deploy.sh (paths.env), not by the C# build. -->
     <!-- <RimWorldModsDir>/path/to/RimWorld/Mods</RimWorldModsDir> -->
 
     <!-- Optional: full path to the installed mod folder (overrides RimWorldModsDir derivation). -->

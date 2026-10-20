@@ -1,5 +1,7 @@
 bin/
 obj/
 tmp/
-Local.props
+
+*.props
 *.dll
+*.env
