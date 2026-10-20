@@ -4,13 +4,22 @@ Core guidelines for agents working in this repository. Follow them unless the us
 
 ## Additional agent context (`.agents/`)
 
-The `.agents/` directory holds supplementary guidance for agents. Treat only the files enumerated below as authoritative agent context; ignore any other files that may appear under `.agents/` unless the user or this file later lists them.
+The `.agents/` directory holds supplementary guidance for agents. Treat only the files enumerated below as authoritative agent context. Ignore any other paths under `.agents/` unless this file lists them, or the user explicitly directs you to a file under `.agents/ref/` (see below).
 
 | File | Purpose |
 |------|---------|
 | [`.agents/OVERVIEW.md`](.agents/OVERVIEW.md) | Canonical mod knowledge base for agents: identity, purpose/premise, package/Harmony ids, log prefix, deploy folder, supported versions, and related conventions. Distilled for agents—prefer it over parsing `Mod/About/` XML. Read it when starting work so changes stay coherent with this mod. When you change About metadata or those conventions, update this file to match. |
 
 Pointers in this section stay mod-agnostic: concrete mod values live only in the enumerated files above.
+
+### Agent reference material (`.agents/ref`)
+
+`.agents/ref/` is a **gitignored** directory for optional, agent-specific reference material. Users place files there and, when relevant, point the agent at a specific path in the prompt.
+
+- **Default: ignore.** Do not list, search, skim, open, or otherwise explore `.agents/ref/` unless the user explicitly instructs you to use a file there for the current task.
+- **User-directed paths only.** When the user names a file under `.agents/ref/`, read that indicated path as reference. Do not spend time hunting for an “adequate” or related file in that directory—you are unlikely to find the right one, and browsing is out of scope.
+- The directory may be **missing or empty**; that is normal. Do not treat absence as an error, and do not create or populate `.agents/ref/` unless the user asks.
+- Contents are **not** authoritative mod context (unlike `.agents/OVERVIEW.md`). Keep the directory gitignored; do not commit its contents.
 
 ## Hard restrictions
 
